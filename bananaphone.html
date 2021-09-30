@@ -1,0 +1,249 @@
+<head>
+<title>ba na na phoneeeeeeee</title>
+
+<style>
+    .blink_me {
+  animation: blinker 0.5s linear infinite;
+  color: red;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+</style>
+</head>
+<h1>ba na na phoneeeeeeee [web edition]</h1>
+<hr>
+
+
+<script>
+ document.getElementById('pingtool').src = 'longringtone.mp3'
+ 
+    window.addEventListener('beforeunload', function (e) {
+        if (document.visibilityState == 'visible') {
+            command('unlisten', document.getElementById('cid').value)
+        }
+        });
+        
+function command(c,p) {
+var xhr = new XMLHttpRequest()
+xhr.open('GET','terminalprocess.php?cmd='+c+'&params='+p,true)
+xhr.send(null)
+}
+
+function updatething() {
+    var xhr = new XMLHttpRequest()
+xhr.open('GET','display.php?chatbox='+document.getElementById('cid').value+'.1')
+xhr.send(null)
+console.log('updating online trackker')
+
+xhr.onreadystatechange = function() {
+    document.getElementById('online').innerHTML = xhr.responseText;
+    console.log(xhr.responseText)
+}
+}
+
+function visibilityListener() {
+  switch(document.visibilityState) {
+    case "hidden":
+      command('unlisten',document.getElementById('cid').value)
+      break;
+    case "visible":
+      command('listen',document.getElementById('cid').value);
+      break;
+  }
+}
+
+
+function loggers(tc) {
+document.getElementById('stat').innerHTML = tc;
+return null;
+}
+  
+window.ticker = 0;
+auds = [];
+
+loggers('Idling...');
+
+function sendp() {
+console.log('starting...');
+loggers('Active! [please allow microphone access and switch to HTTPS]');
+navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(stream => {
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+	
+	var reader = new FileReader();
+	
+
+    const audioChunks = [];
+    mediaRecorder.addEventListener('dataavailable', event => {
+      audioChunks.push(event.data);
+    });
+	
+	document.getElementById('txmsg').addEventListener('click', function() { mediaRecorder.stop() });
+
+    mediaRecorder.addEventListener('stop', () => {
+	loggers('HTTP POSTing...');
+      console.log('finished, transmitting...');
+	  var aublob = new Blob(audioChunks, { 'type' : 'audio/webm; codecs=opus' })
+	  var audurl = window.URL.createObjectURL(aublob);
+	  console.log('blob URL: ' + audurl);
+	  reader.readAsDataURL(aublob);
+	  
+	  reader.onload =  function(e){
+        //console.log('b64 URL:', e.target.result.replace('data:audio/webm; codecs=opus;base64,',''));
+        		console.log(e.target.result.replace('data:audio/webm; codecs=opus;base64,','').length);
+			loggers('Ready');
+			var burl =  e.target.result.replaceAll('+','$[]').replaceAll('data:audio/webm;base64,','').replaceAll('data:audio/webm; codecs=opus;base64,', '');
+			console.log(burl)
+			
+			
+			
+			//xmlhttp
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', document.getElementById('txep').value);
+			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			xhr.send("msg="+burl+"&write="+document.getElementById('cid').value+"&uid=&ukey=&namer=&encode=UTF-8");
+			//xhr.send();
+			console.log(document.getElementById('txep').value+"?write="+document.getElementById('cid').value+"&msg="+burl.slice(-100)+" [:-100]");
+			
+			xhr.onreadystatechange = function() {
+			
+			document.getElementById('err').innerHTML = xhr.responseText
+			console.log(xhr.responseText);
+			
+			}
+			
+			
+			
+			
+			
+			
+			//xmlhttp
+    };
+    });
+  });
+  }
+  
+  
+function refresh() {
+
+
+var xmlhttp = new XMLHttpRequest();
+console.log('starting HTTP GET request + updating tracker')
+updatething();
+//
+xmlhttp.onreadystatechange = function() {
+    var track = xmlhttp.responseText.slice(window.ticker).replaceAll('$[]', '+').replaceAll('$[>]','')
+//console.log('data:audio/webm;codecs=opus;base64,'+track);
+console.log('RT LENGTH = '+xmlhttp.responseText.length);
+
+if (xmlhttp.readyState == 3) {
+ console.log('XMLHTTP 3')   
+}
+
+if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+
+if (xmlhttp.responseText.length < window.ticker) {
+window.ticker = 0;
+document.getElementById('err').innerHTML = 'Pointer reset: 0';
+}
+
+//document.getElementById('pla').src = 'data:audio/webm; codecs=opus;base64,'+xmlhttp.responseText.slice(window.ticker);
+//document.getElementById('pla').play();
+
+var arr = track.split(',[]')
+console.log('playing from: '+window.ticker)
+console.log('playing:'+track)
+
+//ping tool
+if (xmlhttp.responseText.slice(window.ticker).includes('$[>]')) {
+    console.log('Pingtool has received input')
+    document.getElementById('ping').innerHTML = '<p class="blink_me">Incoming ping...</p>'
+    document.getElementById('pingtool').play()
+}
+document.getElementById('pa').disabled = false;
+
+
+    var go = true;
+var tmp = new Audio('data:audio/webm; codecs=opus;base64,'+track);
+//console.log('stack element'+arr[i])
+tmp.play();
+//console.log('played element stack id: '+i);
+
+
+
+
+
+window.ticker = xmlhttp.responseText.length;
+console.log('current ticker = '+window.ticker)
+document.getElementById('err').innerHTML = 'Pointer: '+window.ticker;
+} else if (xmlhttp.readyState == 4 && xmlhttp.status != 200) {
+document.getElementById('err').innerHTML = 'Hub GET request failed: '+document.getElementById('channel').value+' '+xmlhttp.responseText
+}
+}
+//
+xmlhttp.open('GET', document.getElementById('channel').value);
+xmlhttp.setRequestHeader('Cache-Control','no-store');
+xmlhttp.send();
+
+}
+
+
+function pingall() {
+    var xhr = new XMLHttpRequest()
+    xhr.open('POST', document.getElementById('txep').value);
+		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+		xhr.send("msg="+'$[>]'+"&write="+document.getElementById('cid').value+"&uid=&ukey=&namer=&encode=UTF-8");
+    
+
+}
+
+
+
+
+ </script>
+ <div id='pre'>
+Config
+<fieldset>
+CH-URL  <input id='channel' size='100' value='display.php?chatbox=2011'></input><br>
+CH-ID <input id='cid' size='100' value='2011'></input><br>
+TX-ENDPT <input id='txep' size='100' value='sendmsg_integration_nobreak_post.php'></input><br>
+RRMS    <input id='rr' value='2550'></input><br>
+<code>Do not change these settings; they are already preconfigured correctly.</code><br><br>
+<button onclick="setInterval(refresh,document.getElementById('rr').value);document.getElementById('enabledisable').innerHTML = 'Enabled'; document.getElementById('lockbuton').hidden = true; document.getElementById('start').hidden = false; document.getElementById('post').hidden = false; document.getElementById('stat').innerHTML = 'Ready.'; document.getElementById('pre').hidden = true; command('listen',document.getElementById('cid').value); document.addEventListener('visibilitychange', visibilityListener); document.getElementById('ref').disabled = false;" id='lockbuton'>Lock these settings in</button>
+</fieldset>
+</div>
+
+<div id='post'>
+
+Transmitter
+<fieldset>
+<code id='stat'>Disabled</code><br><br>
+<button hidden id='start' onclick='sendp(); document.getElementById("start").hidden = true; document.getElementById("txmsg").hidden = false;'>Speak</button>
+<button hidden id='txmsg' onclick = 'document.getElementById("start").hidden = false; document.getElementById("txmsg").hidden = true;'>Tx Data</button>
+</fieldset>
+Receiver
+<fieldset>
+<!--audio controls src='none' id='pla'>The audio element is not supported.</audio-->
+<code id='enabledisable'>Disabled</code>
+<button disabled id='ref' onclick='refresh()'>Force Reload</button>
+</fieldset>
+Ping Tool
+<fieldset>
+    <p id='ping'>Ready.</p>     <button onclick='document.getElementById("pingtool").pause(); document.getElementById("ping").innerHTML = "Ready."'>Acknowledge</button>&nbsp;<button disabled onclick='pingall()' id='pa'>Ping</button><br><br><button onclick='document.getElementById("pingtool").src = "longringtone.mp3";document.getElementById("pingtool").play(); setTimeout(function() {document.getElementById("pingtool").pause()}) ' id='pas'>Arm/Test</button><br>
+    <audio id='pingtool' loop controls src='invalid'>The audio element for the PINGTOOL is not supported.</audio>
+
+</fieldset>
+
+Debug Info
+<fieldset>
+<code id='err'>Nothing to report!</code>
+</fieldset>
+</div>
+<br>
+<p>PRESS ONCE to start TALKING and PRESS ONCE again to TRANSMIT <br> RELOAD or CLOSE TAB to disconnect.</p>
+<code>You will stay connected until the Bananaphone tab is closed.</code>
